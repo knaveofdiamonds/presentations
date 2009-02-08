@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"> 
+  <head>
+    <title>RubyGame Lightning Talk - LRUG, feb 2009</title>
+    <script type="text/javascript" src="includes/slidy.js"></script>
+    <link rel="stylesheet" type="text/css" href="includes/slidy.css" />
+    <link rel="stylesheet" type="text/css" href="includes/ruby.css" />
+
+  </head>
+  <body>
+    <div class="slide">
+      <h1>Slide 1</h1>
+      <p>Welcome!</p>
+    </div>
+
+    <div class="slide">
+      <h1>Pong!</h1>
+    </div>
+
+    <div class="slide">
+      <h1>RubyGame</h1>
+<pre>
+gem install rubygame
+</pre>
+    </div>
+    <div class="slide">
+      <h1>The game loop</h1>
+<pre>
+<span class="keyword">class </span><span class="class">GameShell</span>
+  <span class="ident">attr_reader</span> <span class="symbol">:screen</span>
+  
+  <span class="keyword">def </span><span class="method">initialize</span><span class="punct">(</span><span class="ident">size</span><span class="punct">)</span>
+    <span class="constant">Rubygame</span><span class="punct">.</span><span class="ident">init</span>
+    <span class="attribute">@screen</span> <span class="punct">=</span> <span class="constant">Screen</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="ident">size</span><span class="punct">)</span>
+  <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">run</span>
+    <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">true</span>
+    <span class="keyword">while</span><span class="punct">(</span><span class="attribute">@running</span><span class="punct">)</span> <span class="keyword">do</span>
+      <span class="ident">step</span>
+    <span class="keyword">end</span>
+    <span class="constant">Rubygame</span><span class="punct">.</span><span class="ident">quit</span>
+  <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">step</span>
+    <span class="attribute">@screen</span><span class="punct">.</span><span class="ident">update</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="constant">GameShell</span><span class="punct">.</span><span class="ident">new( [400, 300] )</span><span class="punct">.</span><span class="ident">run</span>
+
+</pre>
+    </div>
+
+
+    <div class="slide">
+      <h1>Adding the clock and simple events</h1>
+
+<p>Create a clock and an event queue:</p>
+<pre>
+<span class="keyword">def </span><span class="method">initialize</span><span class="punct">(</span><span class="ident">size</span><span class="punct">)</span>
+  ...
+  <span class="attribute">@clock</span> <span class="punct">=</span> <span class="constant">Clock</span><span class="punct">.</span><span class="ident">new</span> <span class="punct">{|</span><span class="ident">c</span><span class="punct">|</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">target_framerate</span> <span class="punct">=</span> <span class="number">40</span> <span class="punct">}</span>
+  <span class="attribute">@queue</span> <span class="punct">=</span> <span class="constant">EventQueue</span><span class="punct">.</span><span class="ident">new</span>
+<span class="keyword">end</span>
+</pre>
+
+<p>In each step, pull events from the queue and handle them:</p>
+<pre>
+<span class="keyword">def </span><span class="method">step</span>
+  <span class="attribute">@queue</span><span class="punct">.</span><span class="ident">fetch_sdl_events</span>
+  <span class="attribute">@queue</span><span class="punct">.</span><span class="ident">each</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">event</span><span class="punct">|</span>
+
+  <span class="keyword">end</span>
+  <span class="attribute">@screen</span><span class="punct">.</span><span class="ident">update</span>
+  <span class="attribute">@clock</span><span class="punct">.</span><span class="ident">tick</span>
+<span class="keyword">end</span>
+</pre>
+    </div>
+
+
+    <div class="slide">
+      <h1>Surfaces <span class="amp">&</span> drawing</h1>
+      <p>Surfaces are a 2D grid of pixels. You can load images into them:</p>
+<pre><span class="ident">surface</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">load</span><span class="punct">(</span> <span class="punct">&quot;</span><span class="string">an_image_file.bmp</span><span class="punct">&quot;</span> <span class="punct">)</span>
+</pre>
+      <p>And you can draw on them directly. Lets make a ball:</p>
+<pre>
+<span class="ident">ball</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span> <span class="punct">[</span><span class="number">9</span><span class="punct">,</span><span class="number">9</span><span class="punct">]</span> <span class="punct">)</span>
+<span class="ident">ball</span><span class="punct">.</span><span class="ident">draw_circle_a</span><span class="punct">(</span> <span class="punct">[</span><span class="number">4</span><span class="punct">,</span><span class="number">4</span><span class="punct">],</span><span class="number">4</span><span class="punct">,[</span><span class="number">0xff</span><span class="punct">]*</span><span class="number">3</span> <span class="punct">)</span>
+<span class="ident">ball</span><span class="punct">.</span><span class="ident">draw_circle_s</span><span class="punct">(</span> <span class="punct">[</span><span class="number">4</span><span class="punct">,</span><span class="number">4</span><span class="punct">],</span><span class="number">4</span><span class="punct">,[</span><span class="number">0xff</span><span class="punct">]*</span><span class="number">3</span> <span class="punct">)</span>
+</pre>
+      <p>And draw it onto the screen:</p>
+<pre>
+<span class="ident">ball</span><span class="punct">.</span><span class="ident">blit</span><span class="punct">(</span> <span class="ident">screen</span><span class="punct">,</span> <span class="punct">[</span><span class="number">10</span><span class="punct">,</span><span class="number">10</span><span class="punct">]</span> <span class="punct">)</span>
+</pre>
+
+      <div style="text-align: center;"><img src="images/ball_blit.png" style="border: 1px solid #000; margin: 0px auto"/></div>
+    </div>
+
+    <div class="slide">
+      <h1>Moving things about the screen</h1>
+      <p>You can't move anything in RubyGame. You can only draw things on surfaces.</p>
+      <div class="center"><img src="images/ball_move.png" /><br/>Whoops!</div>
+    </div>
+
+    <div class="slide">
+      <h1>Sprites</h1>
+      <p>Sprites add the idea of rectangles to surfaces</p>
+      <p>Undraw, update, redraw</p>
+      <div class="center"><img src="images/ball_rect.png" /></div>
+    </div>
+
+    <div class="slide">
+      <h1>A ball sprite</h1>
+<pre>
+<span class="keyword">class </span><span class="class">Ball</span>
+  <span class="ident">include</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">Sprite</span>
+  <span class="ident">attr_accessor</span> <span class="symbol">:vx</span><span class="punct">,</span> <span class="symbol">:vy</span>
+
+  <span class="keyword">def </span><span class="method">initialize</span>
+    <span class="attribute">@image</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">new</span><span class="punct">([</span><span class="number">9</span><span class="punct">,</span><span class="number">9</span><span class="punct">])</span> <span class="comment">#... and draw the ball etc.</span>
+    <span class="attribute">@rect</span>  <span class="punct">=</span> <span class="attribute">@image</span><span class="punct">.</span><span class="ident">make_rect</span>
+    <span class="comment">#... set an initial x and y velocity for the ball.</span>
+  <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">update</span>
+    <span class="ident">rect</span><span class="punct">.</span><span class="ident">x</span><span class="punct">,</span> <span class="ident">rect</span><span class="punct">.</span><span class="ident">y</span> <span class="punct">=</span> <span class="punct">(</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">x</span> <span class="punct">+</span> <span class="attribute">@vx</span><span class="punct">).</span><span class="ident">to_i</span><span class="punct">,</span> <span class="punct">(</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">y</span> <span class="punct">+</span> <span class="attribute">@vy</span><span class="punct">).</span><span class="ident">to_i</span>
+  <span class="keyword">end</span>
+
+  <span class="comment"># No paddle yet, but this will bounce the ball when we have one</span>
+  <span class="keyword">def </span><span class="method">paddle_bounce</span><span class="punct">(</span><span class="ident">paddle</span><span class="punct">)</span>
+    <span class="attribute">@vy</span> <span class="punct">=</span> <span class="punct">-(</span><span class="attribute">@vy</span> <span class="punct">*</span> 1.1<span class="punct">)</span>
+    <span class="attribute">@vx</span> <span class="punct">=</span> <span class="punct">(</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">cx</span> <span class="punct">-</span> <span class="ident">paddle</span><span class="punct">.</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">cx</span><span class="punct">)</span> <span class="punct">*</span> <span class="number">0.25</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+</pre>
+
+    </div>
+
+    <div class="slide">
+      <h1>A paddle sprite</h1>
+    </div>
+
+    <div class="slide">
+      <h1>Wiring the sprites into the game loop</h1>
+    </div>
+
+    <div class="slide">
+      <h1>Moving the paddle</h1>
+    </div>
+
+    <div class="slide">
+      <h1>Sprite Collisions</h1>
+    </div>
+
+    <div class="slide">
+      <h1></h1>
+    </div>
+
+    <div class="slide">
+      <h1>OO Event handling - low level</h1>
+      <p>There are four main components to the event handling:</p>
+      <ul>
+	<li>
+	  <code>EventTriggers</code>
+	  <p><code>MouseMoveTrigger</code>, <code>AndTrigger</code>, more...</p>
+	</li>
+	<li>
+	  <code>EventActions</code>
+	  <p><code>MethodAction</code>, <code>BlockAction</code>, more...</p>
+	</li>
+	<li><code>EventHooks</code>
+	  <p><code>EventTrigger</code> with an <code>EventHook</code></p>
+	</li>
+	<li><code>EventHandlers</code>
+	  <p>Handles invocation of <code>EventHooks</code></p>
+	</li>
+      </ul>
+    </div>
+
+    <div class="slide">
+      <h1>Enabling OO events in the game</h1>
+      <pre>
+<span class="keyword">class </span><span class="class">GameShell</span>
+  <span class="ident">include</span> <span class="constant">EventHandler</span><span class="punct">::</span><span class="constant">HasEventHandler</span>
+  
+  <span class="keyword">def </span><span class="method">initialize</span><span class="punct">(</span><span class="ident">size</span><span class="punct">)</span>
+    ...
+    <span class="attribute">@queue</span><span class="punct">.</span><span class="ident">enable_new_style_events</span>
+    <span class="ident">make_magic_hooks</span><span class="punct">(</span><span class="constant">QuitRequested</span> <span class="punct">=&gt;</span> <span class="ident">lambda</span> <span class="punct">{</span> <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">false</span> <span class="punct">})</span>
+  <span class="keyword">end</span>
+      </pre>
+    </div>
+
+    <div class="slide">
+      <h1></h1>
+    </div>
+
+    <div class="slide">
+      <h1></h1>
+    </div>
+
+    <div class="slide">
+      <h1>More things you can do</h1>
+    </div>
+
+    <div class="slide">
+      <h1>Game Over! Questions?</h1>
+    </div>
+  </body>
+</html>

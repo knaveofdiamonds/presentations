@@ -1,0 +1,20 @@
+.keyword { color: #05c; }
+.constant, .class { color: #a04;}
+.class, .method { font-weight: bold; }
+.attribute { color: #841 }
+.symbol { color: #070; }
+.comment { color: #555 }
+
+ins { 
+    text-decoration: none;
+    background-color: #fff;
+}
+
+h1 {
+    font-family: georgia;
+    font-weight: normal;
+}
+
+h1 .amp {
+    font-style: italic;
+}
