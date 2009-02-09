@@ -9,13 +9,12 @@
 
   </head>
   <body>
-    <div class="slide">
-      <h1>Slide 1</h1>
-      <p>Welcome!</p>
+    <div class="slide cover" style="background-color: #000; text-align:center">
+      <img src="images/cover.jpg" class="cover center" style="width: 95%; height: 95%" />
     </div>
 
-    <div class="slide">
-      <h1>Pong!</h1>
+    <div class="slide cover center" style="background-color: #000;">
+      <img src="images/pong.jpg" height="95%" />
     </div>
 
     <div class="slide">
@@ -23,6 +22,19 @@
 <pre>
 gem install rubygame
 </pre>
+
+<table style="width: 100%;">
+  <col width="50%" />
+  <col width="50%" />
+  <tr>
+    <td>Port of:</td>
+    <td>Bindings to:</td>
+  </tr>
+  <tr>
+    <td><img src="images/pygame.jpg" width="350" /></td>
+    <td><img src="images/sdl.png" width="350" /></td>
+  </tr>
+</table>
     </div>
     <div class="slide">
       <h1>The game loop</h1>
@@ -114,38 +126,87 @@ gem install rubygame
 
     <div class="slide">
       <h1>A ball sprite</h1>
+      <ol>
+      <li>Include the sprite module:
 <pre>
 <span class="keyword">class </span><span class="class">Ball</span>
   <span class="ident">include</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">Sprite</span>
-  <span class="ident">attr_accessor</span> <span class="symbol">:vx</span><span class="punct">,</span> <span class="symbol">:vy</span>
-
+</pre>
+</li>
+      <li>Image and rect properties
+<pre>
   <span class="keyword">def </span><span class="method">initialize</span>
     <span class="attribute">@image</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">new</span><span class="punct">([</span><span class="number">9</span><span class="punct">,</span><span class="number">9</span><span class="punct">])</span> <span class="comment">#... and draw the ball etc.</span>
     <span class="attribute">@rect</span>  <span class="punct">=</span> <span class="attribute">@image</span><span class="punct">.</span><span class="ident">make_rect</span>
-    <span class="comment">#... set an initial x and y velocity for the ball.</span>
-  <span class="keyword">end</span>
-
+</pre>
+</li>
+<li>An update method:
+<pre>
   <span class="keyword">def </span><span class="method">update</span>
     <span class="ident">rect</span><span class="punct">.</span><span class="ident">x</span><span class="punct">,</span> <span class="ident">rect</span><span class="punct">.</span><span class="ident">y</span> <span class="punct">=</span> <span class="punct">(</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">x</span> <span class="punct">+</span> <span class="attribute">@vx</span><span class="punct">).</span><span class="ident">to_i</span><span class="punct">,</span> <span class="punct">(</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">y</span> <span class="punct">+</span> <span class="attribute">@vy</span><span class="punct">).</span><span class="ident">to_i</span>
   <span class="keyword">end</span>
-
-  <span class="comment"># No paddle yet, but this will bounce the ball when we have one</span>
-  <span class="keyword">def </span><span class="method">paddle_bounce</span><span class="punct">(</span><span class="ident">paddle</span><span class="punct">)</span>
-    <span class="attribute">@vy</span> <span class="punct">=</span> <span class="punct">-(</span><span class="attribute">@vy</span> <span class="punct">*</span> 1.1<span class="punct">)</span>
-    <span class="attribute">@vx</span> <span class="punct">=</span> <span class="punct">(</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">cx</span> <span class="punct">-</span> <span class="ident">paddle</span><span class="punct">.</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">cx</span><span class="punct">)</span> <span class="punct">*</span> <span class="number">0.25</span>
-  <span class="keyword">end</span>
-<span class="keyword">end</span>
-
 </pre>
-
+</li>
+<li>And a another method to deal with bouncing</li>
+</ol>
     </div>
 
     <div class="slide">
       <h1>A paddle sprite</h1>
+<pre>
+<span class="keyword">class </span><span class="class">Paddle</span>
+  <span class="ident">include</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">Sprite</span>
+
+  <span class="keyword">def </span><span class="method">initialize</span><span class="punct">(</span><span class="ident">max_x</span><span class="punct">,</span> <span class="ident">speed</span><span class="punct">)</span>
+    <span class="attribute">@image</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">new</span><span class="punct">([</span><span class="number">50</span><span class="punct">,</span><span class="number">10</span><span class="punct">])</span>
+    <span class="attribute">@image</span><span class="punct">.</span><span class="ident">fill</span><span class="punct">([</span><span class="number">0xff</span><span class="punct">]</span> <span class="punct">*</span> <span class="number">3</span><span class="punct">)</span>
+    <span class="attribute">@rect</span> <span class="punct">=</span> <span class="attribute">@image</span><span class="punct">.</span><span class="ident">make_rect</span>
+    <span class="attribute">@max_x</span> <span class="punct">=</span> <span class="ident">max_x</span> <span class="punct">-</span> <span class="ident">rect</span><span class="punct">.</span><span class="ident">width</span>
+    <span class="attribute">@speed</span> <span class="punct">=</span> <span class="ident">speed</span>
+    <span class="attribute">@vx</span> <span class="punct">=</span> <span class="number">0</span>
+  <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">update</span>
+    <span class="keyword">if</span> <span class="punct">(</span><span class="number">0</span><span class="punct">..</span><span class="attribute">@max_x</span><span class="punct">).</span><span class="ident">include?</span><span class="punct">(</span> <span class="ident">rect</span><span class="punct">.</span><span class="ident">x</span> <span class="punct">+</span> <span class="punct">(</span><span class="attribute">@vx</span> <span class="punct">*</span> <span class="attribute">@speed</span><span class="punct">)</span> <span class="punct">)</span>
+      <span class="ident">rect</span><span class="punct">.</span><span class="ident">x</span> <span class="punct">+=</span> <span class="punct">(</span><span class="attribute">@vx</span> <span class="punct">*</span> <span class="attribute">@speed</span><span class="punct">)</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">move_left</span> <span class="attribute">@vx</span> <span class="punct">=</span> <span class="punct">-</span><span class="number">1</span>; <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">move_right</span> <span class="attribute">@vx</span> <span class="punct">=</span> <span class="number">1</span>; <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">stop_moving</span> <span class="attribute">@vx</span> <span class="punct">=</span> <span class="number">0</span>; <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
     </div>
 
     <div class="slide">
       <h1>Wiring the sprites into the game loop</h1>
+<pre>
+<span class="keyword">class </span><span class="class">PongGame</span> <span class="punct">&lt;</span> <span class="constant">GameShell</span>
+  <span class="keyword">def </span><span class="method">initialize</span>
+    <span class="attribute">@background</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">.</span><span class="ident">size</span><span class="punct">)</span>
+    <span class="attribute">@computer</span>   <span class="punct">=</span> <span class="constant">Paddle</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">.</span><span class="ident">width</span><span class="punct">,</span> <span class="number">5</span><span class="punct">)</span>
+    <span class="attribute">@player</span>     <span class="punct">=</span> <span class="constant">Paddle</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">.</span><span class="ident">width</span><span class="punct">,</span> <span class="number">5</span><span class="punct">)</span>
+    <span class="attribute">@ball</span>       <span class="punct">=</span> <span class="constant">Ball</span><span class="punct">.</span><span class="ident">new</span>
+
+    <span class="comment"># ... some initial sprite positioning and setup ...</span>
+
+    <span class="attribute">@sprites</span> <span class="punct">=</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">Group</span><span class="punct">.</span><span class="ident">new</span><span class="punct">([</span><span class="attribute">@player</span><span class="punct">,</span> <span class="attribute">@computer</span><span class="punct">,</span> <span class="attribute">@ball</span><span class="punct">])</span>
+    <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">extend</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">UpdateGroup</span>
+    <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">each</span> <span class="punct">{|</span><span class="ident">s</span><span class="punct">|</span> <span class="ident">register</span> <span class="ident">s</span> <span class="punct">}</span>
+  <span class="keyword">end</span>
+
+  <span class="keyword">def </span><span class="method">step</span>
+    <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">undraw</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">,</span> <span class="attribute">@background</span><span class="punct">)</span>
+    <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">update</span>
+    <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">draw</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">)</span>
+    <span class="keyword">super</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
     </div>
 
     <div class="slide">
@@ -200,15 +261,16 @@ gem install rubygame
     </div>
 
     <div class="slide">
-      <h1></h1>
+      <h1>Pong!</h1>
+      <div class="center"><img src="images/ponggame.png" /></div>
     </div>
 
-    <div class="slide">
-      <h1>More things you can do</h1>
+    <div class="slide cover center" style="background-color: #000;">
+      <img src="images/insertcoin.jpg" height="95%" width="95%" />
     </div>
 
-    <div class="slide">
-      <h1>Game Over! Questions?</h1>
+    <div class="slide cover center" style="background-color: #000;">
+      <img src="images/gameover.jpg" height="95%" width="95%" />
     </div>
   </body>
 </html>
