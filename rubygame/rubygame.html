@@ -3,12 +3,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"> 
   <head>
     <title>RubyGame Lightning Talk - LRUG, feb 2009</title>
+    <script type="text/javascript" src="includes/jquery.js"></script>
+    <script type="text/javascript" src="includes/auto_transition.js"></script>
     <script type="text/javascript" src="includes/slidy.js"></script>
     <link rel="stylesheet" type="text/css" href="includes/slidy.css" />
     <link rel="stylesheet" type="text/css" href="includes/ruby.css" />
 
   </head>
   <body>
+    <div class="background" style="background-color: #fdd; height: 2.5em; width: 100%;">
+      
+    </div>
+
     <div class="slide cover" style="background-color: #000; text-align:center">
       <img src="images/cover.jpg" class="cover center" style="width: 95%; height: 95%" />
     </div>
@@ -83,7 +89,10 @@ gem install rubygame
 <span class="keyword">def </span><span class="method">step</span>
   <span class="attribute">@queue</span><span class="punct">.</span><span class="ident">fetch_sdl_events</span>
   <span class="attribute">@queue</span><span class="punct">.</span><span class="ident">each</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">event</span><span class="punct">|</span>
-
+    <span class="keyword">case</span> <span class="ident">event</span>
+    <span class="keyword">when</span> <span class="constant">QuitEvent</span>
+      <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">false</span>
+    <span class="keyword">end</span>
   <span class="keyword">end</span>
   <span class="attribute">@screen</span><span class="punct">.</span><span class="ident">update</span>
   <span class="attribute">@clock</span><span class="punct">.</span><span class="ident">tick</span>
@@ -119,8 +128,11 @@ gem install rubygame
 
     <div class="slide">
       <h1>Sprites</h1>
-      <p>Sprites add the idea of rectangles to surfaces</p>
-      <p>Undraw, update, redraw</p>
+      <ul>
+        <li>Sprites add the idea of rectangles to surfaces</li>
+        <li>You don't need to manually blit anything any more</li>
+	<li>Follow an undraw, update, redraw cycle</li>
+      </ul>
       <div class="center"><img src="images/ball_rect.png" /></div>
     </div>
 
@@ -147,7 +159,7 @@ gem install rubygame
   <span class="keyword">end</span>
 </pre>
 </li>
-<li>And a another method to deal with bouncing</li>
+<li>And another method to deal with bouncing</li>
 </ol>
     </div>
 
@@ -183,42 +195,106 @@ gem install rubygame
 
     <div class="slide">
       <h1>Wiring the sprites into the game loop</h1>
+      <ol>
+	<li>Create some sprites and a background
 <pre>
-<span class="keyword">class </span><span class="class">PongGame</span> <span class="punct">&lt;</span> <span class="constant">GameShell</span>
-  <span class="keyword">def </span><span class="method">initialize</span>
     <span class="attribute">@background</span> <span class="punct">=</span> <span class="constant">Surface</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">.</span><span class="ident">size</span><span class="punct">)</span>
     <span class="attribute">@computer</span>   <span class="punct">=</span> <span class="constant">Paddle</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">.</span><span class="ident">width</span><span class="punct">,</span> <span class="number">5</span><span class="punct">)</span>
     <span class="attribute">@player</span>     <span class="punct">=</span> <span class="constant">Paddle</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">.</span><span class="ident">width</span><span class="punct">,</span> <span class="number">5</span><span class="punct">)</span>
     <span class="attribute">@ball</span>       <span class="punct">=</span> <span class="constant">Ball</span><span class="punct">.</span><span class="ident">new</span>
-
-    <span class="comment"># ... some initial sprite positioning and setup ...</span>
-
+</pre></li>
+<li>Create a group of sprites that can all be updated, etc.
+<pre>
     <span class="attribute">@sprites</span> <span class="punct">=</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">Group</span><span class="punct">.</span><span class="ident">new</span><span class="punct">([</span><span class="attribute">@player</span><span class="punct">,</span> <span class="attribute">@computer</span><span class="punct">,</span> <span class="attribute">@ball</span><span class="punct">])</span>
     <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">extend</span> <span class="constant">Sprites</span><span class="punct">::</span><span class="constant">UpdateGroup</span>
-    <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">each</span> <span class="punct">{|</span><span class="ident">s</span><span class="punct">|</span> <span class="ident">register</span> <span class="ident">s</span> <span class="punct">}</span>
-  <span class="keyword">end</span>
-
+</pre>
+</li>
+<li>Undraw, update, draw becomes part of each step:
+<pre>
   <span class="keyword">def </span><span class="method">step</span>
     <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">undraw</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">,</span> <span class="attribute">@background</span><span class="punct">)</span>
     <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">update</span>
     <span class="attribute">@sprites</span><span class="punct">.</span><span class="ident">draw</span><span class="punct">(</span><span class="attribute">@screen</span><span class="punct">)</span>
-    <span class="keyword">super</span>
+    ...
   <span class="keyword">end</span>
-<span class="keyword">end</span>
 </pre>
-
+</li></ol>
     </div>
 
     <div class="slide">
       <h1>Moving the paddle</h1>
+      <ol>
+	<li>The Computer's paddle will move by tracking the ball's position</li>
+	<li>Handle keyboard events in each step for the player's paddle:
+<pre>
+    <span class="keyword">case</span> <span class="ident">event</span>
+    <span class="keyword">when</span> <span class="constant">QuitEvent</span>
+      <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">false</span>
+    <span class="keyword">when</span> <span class="constant">KeyDownEvent</span>
+      <span class="keyword">if</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">K_LEFT</span>
+        <span class="attribute">@player</span><span class="punct">.</span><span class="ident">move_left</span>
+      <span class="keyword">elsif</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">K_RIGHT</span>
+        <span class="attribute">@player</span><span class="punct">.</span><span class="ident">move_right</span>
+      <span class="keyword">end</span>
+    <span class="keyword">when</span> <span class="constant">KeyUpEvent</span>
+      <span class="keyword">if</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">K_LEFT</span> <span class="punct">||</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">K_RIGHT</span>
+        <span class="attribute">@player</span><span class="punct">.</span><span class="ident">stop_moving</span>  
+      <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre>
+	</li>
     </div>
 
     <div class="slide">
       <h1>Sprite Collisions</h1>
+      <ol>
+	<li>Sprites have a <code>collide_sprite?</code> method to check for collisions
+<pre>
+  <span class="keyword">def </span><span class="method">check_for_bounce</span>
+    <span class="keyword">if</span> <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">collide_sprite?</span><span class="punct">(</span><span class="attribute">@player</span><span class="punct">)</span>
+      <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">paddle_bounce</span><span class="punct">(</span><span class="attribute">@player</span><span class="punct">)</span>
+    <span class="keyword">elsif</span> <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">collide_sprite?</span><span class="punct">(</span><span class="attribute">@computer</span><span class="punct">)</span>
+      <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">paddle_bounce</span><span class="punct">(</span><span class="attribute">@computer</span><span class="punct">)</span>
+</pre></li>
+<li>We also need to check for bouncing off the side
+<pre>
+    <span class="keyword">elsif</span> <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">left</span> <span class="punct">&lt;</span> <span class="number">0</span> <span class="punct">||</span> <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">right</span> <span class="punct">&gt;</span> <span class="attribute">@screen</span><span class="punct">.</span><span class="ident">width</span>
+      <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">vx</span> <span class="punct">=</span> <span class="punct">-</span><span class="attribute">@ball</span><span class="punct">.</span><span class="ident">vx</span>
+</pre></li>
+<li>Or if someone has won the game:
+<pre>
+    <span class="keyword">elsif</span> <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">top</span> <span class="punct">&lt;</span> <span class="number">0</span>
+      <span class="attribute">@queue</span> <span class="punct">&lt;&lt;</span> <span class="constant">GameOver</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="symbol">:player</span><span class="punct">)</span>
+    <span class="keyword">elsif</span> <span class="attribute">@ball</span><span class="punct">.</span><span class="ident">rect</span><span class="punct">.</span><span class="ident">bottom</span> <span class="punct">&gt;</span> <span class="attribute">@screen</span><span class="punct">.</span><span class="ident">height</span>
+      <span class="attribute">@queue</span> <span class="punct">&lt;&lt;</span> <span class="constant">GameOver</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="symbol">:computer</span><span class="punct">)</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+</pre></li></ol>
     </div>
 
     <div class="slide">
-      <h1></h1>
+      <h1>Switch won't scale</h1>
+      <p>Latest rubygame release contains an alternative OO event handling mechanism</p>
+      <p>Lets us get rid of:</p>
+<pre>
+    <span class="keyword">case</span> <span class="ident">event</span>
+    <span class="keyword">when</span> <span class="constant">QuitEvent</span>
+      <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">false</span>
+    <span class="keyword">when</span> <span class="constant">GameOver</span>
+      <span class="ident">puts</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">winner</span>
+      <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">false</span>
+    <span class="keyword">when</span> <span class="constant">KeyDownEvent</span>
+      <span class="keyword">if</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">Rubygame</span><span class="punct">::</span><span class="constant">K_LEFT</span>
+        <span class="attribute">@player</span><span class="punct">.</span><span class="ident">move_left</span>
+      <span class="keyword">elsif</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">Rubygame</span><span class="punct">::</span><span class="constant">K_RIGHT</span>
+        <span class="attribute">@player</span><span class="punct">.</span><span class="ident">move_right</span>
+      <span class="keyword">end</span>
+    <span class="keyword">when</span> <span class="constant">KeyUpEvent</span>
+      <span class="keyword">if</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">Rubygame</span><span class="punct">::</span><span class="constant">K_LEFT</span> <span class="punct">||</span> <span class="ident">event</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="constant">Rubygame</span><span class="punct">::</span><span class="constant">K_RIGHT</span>
+        <span class="attribute">@player</span><span class="punct">.</span><span class="ident">stop_moving</span>  
+      <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre>
     </div>
 
     <div class="slide">
@@ -243,21 +319,55 @@ gem install rubygame
     </div>
 
     <div class="slide">
-      <h1>Enabling OO events in the game</h1>
-      <pre>
-<span class="keyword">class </span><span class="class">GameShell</span>
+      <h1>Using make_magic_hooks</h1>
+<ol>
+<li>Mixin <code>HasEventHandler</code> to the game and sprites:
+<pre>
   <span class="ident">include</span> <span class="constant">EventHandler</span><span class="punct">::</span><span class="constant">HasEventHandler</span>
-  
+</pre>
+</li>
+<li>In the game shell:
+      <pre>
   <span class="keyword">def </span><span class="method">initialize</span><span class="punct">(</span><span class="ident">size</span><span class="punct">)</span>
     ...
     <span class="attribute">@queue</span><span class="punct">.</span><span class="ident">enable_new_style_events</span>
     <span class="ident">make_magic_hooks</span><span class="punct">(</span><span class="constant">QuitRequested</span> <span class="punct">=&gt;</span> <span class="ident">lambda</span> <span class="punct">{</span> <span class="attribute">@running</span> <span class="punct">=</span> <span class="constant">false</span> <span class="punct">})</span>
   <span class="keyword">end</span>
       </pre>
+</li>
+<li>In the sprite setup:
+<pre>
+    <span class="attribute">@player</span><span class="punct">.</span><span class="ident">make_magic_hooks</span><span class="punct">(</span> <span class="symbol">:left</span>  <span class="punct">=&gt;</span> <span class="symbol">:move_left</span><span class="punct">,</span>
+                              <span class="symbol">:right</span> <span class="punct">=&gt;</span> <span class="symbol">:move_right</span><span class="punct">,</span>
+                              <span class="constant">KeyReleaseTrigger</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span> <span class="symbol">:left</span> <span class="punct">)</span>  <span class="punct">=&gt;</span> <span class="symbol">:stop_moving</span><span class="punct">,</span>
+                              <span class="constant">KeyReleaseTrigger</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span> <span class="symbol">:right</span> <span class="punct">)</span> <span class="punct">=&gt;</span> <span class="symbol">:stop_moving</span> <span class="punct">)</span>
+
+</pre>
+</li>
+</ol>
     </div>
 
     <div class="slide">
-      <h1></h1>
+      <h1>Use Observer-style interaction</h1>
+<ol>
+<li>In the GameShell, add the ability for objects to register themselves:
+<pre>
+  <span class="comment"># Register the object to receive all events.</span>
+  <span class="comment"># Events will be passed to the object's #handle method.</span>
+  <span class="keyword">def </span><span class="method">register</span><span class="punct">(</span> <span class="punct">*</span><span class="ident">objects</span> <span class="punct">)</span>
+    <span class="ident">objects</span><span class="punct">.</span><span class="ident">each</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">object</span><span class="punct">|</span>
+      <span class="ident">append_hook</span><span class="punct">(</span> <span class="symbol">:owner</span>   <span class="punct">=&gt;</span> <span class="ident">object</span><span class="punct">,</span> 
+                   <span class="symbol">:trigger</span> <span class="punct">=&gt;</span> <span class="constant">YesTrigger</span><span class="punct">.</span><span class="ident">new</span><span class="punct">,</span> 
+                   <span class="symbol">:action</span>  <span class="punct">=&gt;</span> <span class="constant">MethodAction</span><span class="punct">.</span><span class="ident">new</span><span class="punct">(</span><span class="symbol">:handle</span><span class="punct">)</span> <span class="punct">)</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+</pre>
+<li>Register everthing in the sprite group:
+<pre>
+    register *<span class="attribute">@sprites</span>
+</pre>
+</li>
+</ol>
     </div>
 
     <div class="slide">

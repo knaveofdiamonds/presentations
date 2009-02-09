@@ -11,14 +11,7 @@
 var ns_pos = (typeof window.pageYOffset!='undefined');
 var khtml = ((navigator.userAgent).indexOf("KHTML") >= 0 ? true : false);
 var opera = ((navigator.userAgent).indexOf("Opera") >= 0 ? true : false);
-var ie = (typeof document.all != "undefined" && !opera);
 var ie7 = (!ns_pos && navigator.userAgent.indexOf("MSIE 7") != -1);
-var ie8 = (!ns_pos && navigator.userAgent.indexOf("MSIE 8") != -1);
-//javascript:\'&lt;html>hello&lt;/html>\'
-
-if (ie && !ie8)
-  document.write("<iframe id='historyFrame' src='javascript:\"<html"+"></"+"html>\"' height='1' width='1' style='position:absolute;left:-800px'></iframe>");
-//  document.write("<iframe id='historyFrame' src='blank.html' height='1' width='1' style='position:absolute;left:-800px'></iframe>");
 
 window.onload = startup; // equivalent to onload on body element
 
@@ -227,19 +220,6 @@ strings_ja[helpText] =
     "マウス左クリック ・ スペース ・ 左右キー " +
     "または Page Up ・ Page Downで操作， S ・ Bでフォントサイズ変更";
 
-var strings_zh = {
-  "slide":"幻灯片",
-  "help?":"帮助?",
-  "contents?":"内容?",
-  "table of contents":"目录",
-  "Table of Contents":"目录",
-  "restart presentation":"重新启动展示",
-  "restart?":"重新启动?"
-};
-
-strings_zh[helpText] =
-  "用鼠标点击, 空格条, 左右箭头, Pg Up 和 Pg Dn 导航. " +
-  "用 S, B 改变字体大小.";
 
 // each such language array is declared in the localize array
 // used indirectly as in help.innerHTML = "help".localize();
@@ -253,8 +233,7 @@ var localize = {
      "hu":strings_hu,
      "it":strings_it,
      "el":strings_el,
-     "jp":strings_ja,
-     "zh":strings_zh
+     "jp":strings_ja
    };
 
 /* general initialization */
@@ -316,9 +295,7 @@ function startup()
    document.onkeydown = keyDown;
    window.onresize  = resized;
    window.onscroll = scrolled;
-   window.onunload = unloaded;
    singleSlideView();
-
 
    setLocation();
    resized();
@@ -327,7 +304,7 @@ function startup()
      setTimeout("ieHack()", 100);
 
    showToolbar();
-   setInterval("checkLocation()", 200); // for back button detection
+   autoTransition.initialize();
 }
 
 // add localize method to all strings for use
@@ -386,11 +363,6 @@ function ieHack()
 {
    window.resizeBy(0,-1);
    window.resizeBy(0, 1);
-}
-
-function unloaded(e)
-{
-  //alert("unloaded");
 }
 
 // Firefox reload SVG bug work around
@@ -811,17 +783,11 @@ function keyDown(event)
 
     if (key == 34) // Page Down
     {
-       if (viewAll)
-         return true;
-
        nextSlide(false);
        return cancel(event);
     }
     else if (key == 33) // Page Up
     {
-       if (viewAll)
-         return true;
-
        previousSlide(false);
        return cancel(event);
     }
@@ -981,7 +947,8 @@ function mouseButtonClick(e)
    }
    else leftclick = true;
 
-   //alert("selected text length = "+selectedTextLen);
+   // dismiss table of contents
+   hideTableOfContents();
 
    if (selectedTextLen > 0)
    {
@@ -991,16 +958,12 @@ function mouseButtonClick(e)
       return false;
    }
 
-   // dismiss table of contents
-   hideTableOfContents();
-
    // check if target is something that probably want's clicks
    // e.g. embed, object, input, textarea, select, option
 
    if (mouseClickEnabled && leftclick &&
         target.nodeName != "EMBED" &&
         target.nodeName != "OBJECT" &&
-        target.nodeName != "VIDEO" &&
         target.nodeName != "INPUT" &&
         target.nodeName != "TEXTAREA" &&
         target.nodeName != "SELECT" &&
@@ -1135,22 +1098,6 @@ function lastSlide()
       setEosStatus(true);
       setLocation();
    }
-}
-
-// first slide is 0
-function gotoSlide(num)
-{
-  //alert("going to slide " + (num+1));
-  var slide = slides[slidenum];
-  hideSlide(slide);
-  slidenum = num;
-  slide = slides[slidenum];
-  lastShown = null;
-  setVisibilityAllIncremental("hidden");
-  setEosStatus(!nextIncrementalItem(lastShown));
-  document.title = title + " (" + (slidenum+1) + ")";
-  showSlide(slide);
-  showSlideNumber();
 }
 
 function setEosStatus(state)
@@ -1796,9 +1743,6 @@ function pageAddress(uri)
 {
    var i = uri.indexOf("#");
 
-   if (i < 0)
-     i = uri.indexOf("%23");
-
    // check if anchor is entire page
 
    if (i < 0)
@@ -1813,71 +1757,20 @@ function showSlideNumber()
            (slidenum + 1) + "/" + slides.length;
 }
 
-// every 200mS check if the location has been changed as a
-// result of the user activating the Back button/menu item
-// doesn't work for Opera < 9.5
-function checkLocation()
-{
-  var hash = location.hash;
-
-  if (slidenum > 0 && (hash == "" || hash == "#"))
-    gotoSlide(0);
-  else if (hash.length > 2 && hash != "#("+(slidenum+1)+")")
-  {
-    var num = parseInt(location.hash.substr(2));
-
-    if (!isNaN(num))
-      gotoSlide(num-1);
-  }
-}
-
-// this doesn't push location onto history stack for IE
-// for which a hidden iframe hack is needed: load page into
-// the iframe with script that set's parent's location.hash
-// but that won't work for standalone use unless we can
-// create the page dynamically via a javascript: URL
 function setLocation()
 {
    var uri = pageAddress(location.href);
-   var hash = "#(" + (slidenum+1) + ")";
 
-   if (slidenum >= 0)
-      uri = uri + hash;
+   //if (slidenum > 0)
+      uri = uri + "#(" + (slidenum+1) + ")";
 
-   if (ie && !ie8)
-     pushHash(hash);
-
-   if (uri != location.href /*&& !khtml */)
+   if (uri != location.href && !khtml)
       location.href = uri;
 
-   if (khtml)
-      hash = "(" + (slidenum+1) + ")";
-
-   if (!ie && location.hash != hash && location.hash != "")
-     location.hash = hash;
-
    document.title = title + " (" + (slidenum+1) + ")";
+   //document.title = (slidenum+1) + ") " + slideName(slidenum);
+
    showSlideNumber();
-}
-
-// only used for IE6 and IE7
-function onFrameLoaded(hash)
-{
-  location.hash = hash;
-  var uri = pageAddress(location.href);
-  location.href = uri + hash;
-}
-
-// history hack with thanks to Bertrand Le Roy
-function pushHash(hash)
-{
-  if (hash == "") hash = "#(1)";
-  window.location.hash = hash;
-  var doc = document.getElementById("historyFrame").contentWindow.document;
-  doc.open("javascript:'<html></html>'");
-  doc.write("<html><head><script type=\"text/javascript\">parent.onFrameLoaded('"+
-    (hash) + "');</script></head><body>hello mum</body></html>");
-  doc.close();
 }
 
 // find current slide based upon location
@@ -1995,7 +1888,8 @@ function slideName(index)
 
 // find first h1 element in DOM tree
 function findHeading(node)
-{  if (!node || node.nodeType != 1)
+{
+  if (!node || node.nodeType != 1)
     return null;
 
   if (node.nodeName == "H1" || node.nodeName == "h1")
@@ -2077,7 +1971,7 @@ function findSizeAdjust()
          return 1 * content;
    }
 
-   return 1;
+   return 0;
 }
 
 function addToolbar()
@@ -2094,7 +1988,16 @@ function addToolbar()
 
       slideCounter = document.createElement("div")
       slideCounter.innerHTML = "slide".localize() + " n/m";
+      slideCounter.setAttribute("style", "display: inline");
+
+      right.appendChild(autoTransition.createTimerElement());
+      right.appendChild(autoTransition.createSpacerElement());
+      right.appendChild(autoTransition.createControlElement());
+      right.appendChild(autoTransition.createSpacerElement());
+      right.appendChild(autoTransition.createResetElement());
+      right.appendChild(autoTransition.createSpacerElement(20));
       right.appendChild(slideCounter);
+
       toolbar.appendChild(right);
 
       var left = document.createElement("div");
@@ -2242,6 +2145,7 @@ function addToolbar()
 
       slideCounter.innerHTML = "slide".localize() + " n/m";
       toolbar.appendChild(slideCounter);
+
    }
 
    // ensure that click isn't passed through to the page
@@ -2503,14 +2407,9 @@ function tableOfContents()
       this.first.focus();
   }
 
-  toc.onmouseup = mouseButtonUp;
-
   toc.onclick = function (e) {
     e||(e=window.event);
-
-    if (selectedTextLen <= 0)
-       hideTableOfContents();
-
+    hideTableOfContents();
     stopPropagation(e);
     
     if (e.cancel != undefined)
