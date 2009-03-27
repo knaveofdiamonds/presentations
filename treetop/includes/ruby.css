@@ -1,0 +1,16 @@
+h1 {
+    font-family: georgia;
+    font-weight: normal;
+    color: #fff;
+}
+
+h1 .amp {
+    font-style: italic;
+}
+
+.cover.slide h1 {
+  background-color: #900;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}

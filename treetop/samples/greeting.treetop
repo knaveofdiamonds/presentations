@@ -1,0 +1,13 @@
+grammar Greeting
+  rule expression
+    greeting ','? ' '+ greeted '!'?
+  end
+
+  rule greeting
+    "Hello" / "Hola" / "Word up"
+  end
+
+  rule greeted
+    [^!]+
+  end
+end

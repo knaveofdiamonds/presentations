@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"> 
+  <head>
+    <title>Building mini languages with treetop</title>
+    <script type="text/javascript" src="includes/jquery.js"></script>
+    <script type="text/javascript" src="includes/auto_transition.js"></script>
+    <script type="text/javascript" src="includes/slidy.js"></script>
+    <link rel="stylesheet" type="text/css" href="includes/slidy.css" />
+    <link rel="stylesheet" type="text/css" href="includes/ruby.css" />
+
+  </head>
+  <body>
+    <div class="background" style="background-color: #900; height: 2.5em; width: 100%;">
+
+    </div>
+
+    <div class="slide cover" style="background: url(includes/treetop.jpg) #000 center center no-repeat; text-align:center">
+      <h1 style="color: #fff;">Building Mini-languages in Ruby with Treetop</h1>
+      <h1 style="color: #fff;">Roland Swingler</h1>
+      <img src="" />
+</div>
+
+<div class='slide'>
+<h1>We've got internal DSLs everywhere in Ruby</h1>
+
+<ul>
+<li>Rake, Sinatra, ActiveRecord, RSpec ...</li>
+<li>More! Everywhere!</li>
+</ul>
+
+<!-- * Line between API / DSL fuzzy
+     * Domains tend to be fairly programmer-oriented -->
+
+</div>
+
+<div class='slide'>
+<h1>Why bother with external DSLs then?</h1>
+
+<ul>
+<li>Syntax</li>
+</ul>
+
+<!-- Sometimes you have no choice - "Language" has been defined by someone else - you just need to parse it, Structured text you've scraped from the web, pre-defined protocols or file formats -->
+
+</div>
+
+<div class='slide'>
+<h1>But... Parsing is hard! Lets go shopping.</h1>
+
+<ul>
+<li>Compiler / Interpreter literature can be daunting</li>
+</ul>
+
+<p><img src="includes/teletubbies.jpg" width="400"/></p>
+
+<!-- * a lot of confusing names like LL and LR that sound like teletubbies
+     * maths / theory heavy
+     * usually use C or a language like Scheme 
+     * focused on building production compilers or pushing language theory -->
+
+</div>
+
+<div class='slide'>
+<h1>It doesn't have to be hard: Treetop</h1>
+
+<ul>
+<li>rubyish way of writing minilanguages</li>
+<li>A PEG - Parsing Expression Grammar</li>
+<li>as used by Cucumber:</li>
+</ul>
+
+<p><img src="includes/cucumber.jpg" width="400"/></p>
+
+</div>
+
+<div class='slide'>
+<h1>Builds a tree</h1>
+
+<p><img src="includes/rubygrammar.jpg" width="95%" /></p>
+
+</div>
+
+<div class='slide'>
+<h1>How do you use it then?</h1>
+
+<ul>
+<li>You write a <em>Grammar</em>. A grammar is just a list of <em>Rules</em></li>
+<li>Then either run tt to create a ruby parser:
+<pre>
+tt my<em>grammar.treetop 
+# =&gt; outputs a my</em>grammar.rb file
+</pre></li>
+<li>Or use the polyglot gem to compile the grammar at runtime</li>
+</ul>
+
+<!-- * pure parser just says yes or no. not very useful, so we build a tree
+     * defines how to build a tree structure the rules explain which bits of the input
+       string should be used -->
+
+</div>
+
+<div class='slide'>
+<h1>Simple example - defining the grammar</h1>
+
+<pre><span class="ident">grammar</span> <span class="constant">Greeting</span>
+  <span class="ident">rule</span> <span class="ident">expression</span>
+    <span class="ident">greeting</span> <span class="punct">'</span><span class="string">,</span><span class="punct">'?</span> <span class="punct">'</span><span class="string"> </span><span class="punct">'+</span> <span class="ident">greeted</span> <span class="punct">'</span><span class="string">!</span><span class="punct">'?</span>
+  <span class="keyword">end</span>
+
+  <span class="ident">rule</span> <span class="ident">greeting</span>
+    <span class="punct">&quot;</span><span class="string">Hello</span><span class="punct">&quot;</span> <span class="punct">/</span> <span class="punct">&quot;</span><span class="string">Hola</span><span class="punct">&quot;</span> <span class="punct">/</span> <span class="punct">&quot;</span><span class="string">Word up</span><span class="punct">&quot;</span>
+  <span class="keyword">end</span>
+
+  <span class="ident">rule</span> <span class="ident">greeted</span>
+    <span class="punct">[^!]+</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+</div>
+
+<div class='slide'>
+<h1>Simple example - using it</h1>
+
+<pre>
+<span class="ident">output</span> <span class="punct">=</span> <span class="constant">GreetingParser</span><span class="punct">.</span><span class="ident">new</span><span class="punct">.</span><span class="ident">parse</span> <span class="punct">&quot;</span><span class="string">Word up, world!</span><span class="punct">&quot;</span>
+<span class="ident">puts</span> <span class="punct">&quot;</span><span class="string">You said '<span class="expr">#{output.greeting.text_value}</span>' to: <span class="expr">#{output.greeted.text_value}</span></span><span class="punct">&quot;</span> <span class="keyword">if</span> <span class="ident">output</span>
+
+<span class="constant">GreetingParser</span><span class="punct">.</span><span class="ident">new</span><span class="punct">.</span><span class="ident">parse</span><span class="punct">(&quot;</span><span class="string">Farewell, forever</span><span class="punct">&quot;)</span> <span class="comment">#=&gt; returns nil</span>
+
+</pre>
+
+</div>
+
+<div class='slide'>
+<h1>A more realistic example</h1>
+
+<ul>
+<li>working on making it easy to write XMPP bot that can respond to chat room messages</li>
+<li>Actions defined with a standard internal-DSL approach:</li>
+</ul>
+
+<pre>listen /some message regxp/ do |msg|
+  # do something, maybe send a reply to the room
+end
+</pre>
+
+<ul>
+<li><p>The problem is that a typical regular expression may look like:</p>
+
+<p><pre>/^\s<em>whereis\s+(.+?)(?:\s+(?:on\s+)?(.+?))?\s</em>$/</pre></p></li>
+</ul>
+
+</div>
+
+<div class='slide'>
+<h1>Replace the regular expression with a mini-language</h1>
+
+<ul>
+<li>This looks better:</li>
+</ul>
+
+<pre>
+whereis &lt;person&gt; [[on] &lt;day&gt;]
+</pre>
+
+<ul>
+<li>Some more examples of actions:</li>
+</ul>
+
+<pre>
+monitor build &lt;build_key&gt;
+slap &lt;someone&gt; [for &lt;something&gt;]
+</pre>
+
+<ul>
+<li>more interesting than the greeting example, because we have nested structures</li>
+</ul>
+
+</div>
+
+<div class='slide'>
+<h1>Grammar</h1>
+
+<pre><span class="ident">grammar</span> <span class="constant">Message</span>
+  <span class="ident">rule</span> <span class="ident">expression</span>
+    <span class="punct">(</span><span class="ident">words</span> <span class="punct">/</span> <span class="ident">identifier</span> <span class="punct">/</span> <span class="ident">optional</span><span class="punct">)+</span>
+  <span class="keyword">end</span>
+
+  <span class="ident">rule</span> <span class="ident">words</span>
+    <span class="punct">[^&gt;&lt;\[\]]+</span>
+  <span class="keyword">end</span>
+
+  <span class="ident">rule</span> <span class="ident">identifier</span>
+    <span class="punct">'</span><span class="string">&lt;</span><span class="punct">'</span> <span class="ident">identifier_value</span><span class="punct">:(</span> <span class="punct">[</span><span class="ident">a</span><span class="punct">-</span><span class="ident">zA</span><span class="punct">-</span><span class="constant">Z_</span><span class="punct">]</span> <span class="punct">[</span><span class="ident">a</span><span class="punct">-</span><span class="ident">zA</span><span class="punct">-</span><span class="constant">Z_0</span><span class="punct">-</span><span class="number">9</span> <span class="punct">]*</span> <span class="punct">)</span> <span class="punct">'</span><span class="string">&gt;</span><span class="punct">'</span>
+  <span class="keyword">end</span>
+
+  <span class="ident">rule</span> <span class="ident">optional</span>
+    <span class="punct">&quot;</span><span class="string">[</span><span class="punct">&quot;</span> <span class="ident">expression</span> <span class="punct">&quot;</span><span class="string">]</span><span class="punct">&quot;</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+</div>
+
+<div class='slide'>
+<h1>Getting it to do something</h1>
+
+<ul>
+<li>You can treat the generated tree as a data structure (as with Greeting)</li>
+<li>You can make the tree responsible for actions (Interpreter pattern)</li>
+<li>Each node has an interpret method which does the appropriate thing for that node.</li>
+<li>Need to pass a context around to collect values</li>
+</ul>
+
+</div>
+
+<div class='slide'>
+<h1>Adding code to nodes</h1>
+
+<ul>
+<li>Inline:</li>
+</ul>
+
+<pre>    rule optional
+      "[" expression "]" {
+
+        def interpret(context)
+          "(?:" + elements.interpret(context)  + ")?"
+        end
+
+      }
+    end
+</pre>
+
+<ul>
+<li>External module:</li>
+</ul>
+
+<pre>    rule optional
+      "[" expression "]" &lt;OptionalNode&gt;
+    end
+</pre>
+
+</div>
+
+<div class='slide'>
+<h1>Warning!</h1>
+
+<ul>
+<li>You can't define any type of grammar with Treetop. </li>
+<li>Left recursion is OUT!</li>
+</ul>
+
+<pre>
+rule infinite_loop
+  infinite_loop / "will never be chosen"
+end
+</pre>
+
+<ul>
+<li>A good book for more theory is Programming Pragmatics</li>
+</ul>
+
+</div>
+
+<div class='slide'>
+<h1>Other Options</h1>
+
+<ul>
+<li>Ragel - from brief overview more complicated than treetop. Used in Mongrel.</li>
+<li>"Real" parser-generators ANTLR, Bison/Flex, lots more but not many specifically targeting ruby output</li>
+<li>Hand-written parsers</li>
+</ul>
+
+</div>
+
+<div class='slide'>
+<h1>Thanks</h1>
+
+<ul>
+<li>twitter: @knaveofdiamonds</li>
+<li>blog: http://knaveofdiamonds.tumblr.com</li>
+<li>code: http://github.com/knaveofdiamonds</li>
+</ul>
+</div></body></html>

@@ -1,0 +1,20 @@
+require 'rubygems'
+require 'syntax'
+require 'syntax/convertors/html'
+require 'hpricot'
+
+convertor = Syntax::Convertors::HTML.for_syntax "ruby"
+
+File.open("text.withcode.markdown", "w") do |fh|
+  File.readlines("text.markdown").each do |line|
+    if line =~ /CODEFILE: (.+)/
+      fh.write convertor.convert( File.read($~[1]) ).sub("</pre>", "\n</pre>\n")
+    else
+      fh.write line
+    end
+  end
+end
+
+convereted = `markdown text.withcode.markdown`
+File.unlink("text.withcode.markdown")
+puts x

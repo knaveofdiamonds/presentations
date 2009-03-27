@@ -1,0 +1,9 @@
+require 'treetop'
+require 'greeting'
+
+parser = GreetingParser.new
+
+output = parser.parse "Word up, world!"
+puts "You said '#{output.greeting.text_value}' to: #{output.greeted.text_value}" if output
+
+GreetingParser.new.parse("Farewell, forever") #=> returns nil
